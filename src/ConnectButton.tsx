@@ -1,13 +1,13 @@
 // ConnectButton.tsx
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useAppKit, useAppKitAccount } from "@reown/appkit/react";
-import { useDisconnect } from "@reown/appkit/react";
+// import { useDisconnect } from "@reown/appkit/react";
 import "./ConnectButton.css";
 
 export default function ConnectButton() {
   const { open } = useAppKit();
   const { isConnected, address, status } = useAppKitAccount(); // address is the active account (EVM/Solana/Bitcoin depending on current ns)
-  const { disconnect } = useDisconnect();
+  // const { disconnect } = useDisconnect();
 
   // const [copied, setCopied] = useState(false);
 
@@ -39,13 +39,13 @@ export default function ConnectButton() {
   //   }
   // };
 
-  const onDisconnect = async () => {
-    try {
-      await disconnect();
-    } catch {
-      // swallow
-    }
-  };
+  // const onDisconnect = async () => {
+  //   try {
+  //     await disconnect();
+  //   } catch {
+  //     // swallow
+  //   }
+  // };
 
   if (!isConnected) {
     return (
