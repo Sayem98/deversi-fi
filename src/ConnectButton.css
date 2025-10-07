@@ -1,0 +1,129 @@
+/* Wallet Button */
+.wallet-connect {
+  background: #e97451;
+  color: #fff;
+  border: none;
+  padding: 12px 25px;
+  border-radius: 10px;
+  font-weight: bold;
+  cursor: pointer;
+  margin-bottom: 20px;
+  width: 100%;
+  font-size: 1.1em;
+  transition: all 0.3s ease;
+}
+
+.wallet-connect:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 20px #e97451;
+}
+
+/* Connected State Container */
+.wallet-connected {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  justify-content: center;
+  width: 100%;
+  text-align: center;
+  z-index: 10;
+  animation: fadeIn 0.4s ease;
+}
+
+/* Account Chip (Address display) */
+.account-chip {
+  background: #111827;
+  color: #e5e7eb;
+  border: 1px solid #1f2937;
+  padding: 10px 16px;
+  border-radius: 999px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  min-width: 180px;
+}
+
+.account-chip:hover {
+  background: #1f2937;
+  transform: translateY(-1px);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.08);
+}
+
+.account-chip .caret {
+  opacity: 0.6;
+  margin-left: 2px;
+}
+
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: #9ca3af;
+  flex-shrink: 0;
+}
+.status-dot.ok {
+  background: #10b981; /* green when connected */
+}
+
+.account-chip .addr {
+  letter-spacing: 0.2px;
+  font-family: monospace;
+  font-size: 0.95em;
+}
+
+/* Account Action Buttons */
+.account-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
+.account-actions .action {
+  background: #111827;
+  color: #e5e7eb;
+  border: 1px solid #1f2937;
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: background 0.25s ease, transform 0.25s ease;
+}
+
+.account-actions .action:hover {
+  background: #0b1220;
+  transform: translateY(-1px);
+}
+
+.account-actions .action.danger {
+  border-color: #dc2626;
+  color: #fecaca;
+}
+
+.account-actions .action.ghost {
+  opacity: 0.85;
+}
+
+/* Animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
