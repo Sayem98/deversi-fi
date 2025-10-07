@@ -569,7 +569,7 @@ function Page() {
 
     // ✅ Limit to 8 decimals but remove trailing zeros
     const formatted = ethValue
-      ? parseFloat(ethValue.toFixed(8)).toString()
+      ? parseFloat(ethValue.toFixed(5)).toString()
       : "";
 
     setEthAmount(formatted);
