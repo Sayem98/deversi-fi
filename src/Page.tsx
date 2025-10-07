@@ -557,7 +557,7 @@ function Page() {
     }
     const balance = bal ? parseFloat(bal.formatted) : 0;
     const ethValue = balance * (p / 100);
-    setEthAmount(ethValue ? ethValue.toString() : "");
+    setEthAmount(ethValue ? ethValue.toFixed(8).toString() : "");
     setCurrentPercentage(p);
   }
 
@@ -632,7 +632,7 @@ function Page() {
             className="title"
             style={{ fontSize: "1.8em", fontWeight: "bold", marginTop: 10 }}
           >
-            World DiversiFi Tokens
+            DiversiFi Tokens Purchase
           </div>
           <div
             className="subtitle"
