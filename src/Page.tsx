@@ -632,7 +632,7 @@ function Page() {
             className="title"
             style={{ fontSize: "1.8em", fontWeight: "bold", marginTop: 10 }}
           >
-            Token Purchase
+            World DiversiFi Tokens
           </div>
           <div
             className="subtitle"
