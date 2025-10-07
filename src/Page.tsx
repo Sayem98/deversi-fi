@@ -266,12 +266,6 @@ function Page() {
     }
   }
 
-  function handleSetPercentage(p: number) {
-    setCurrentPercentage(p);
-    const amt = Math.max(0, ethBalance - 0.01) * (p / 100); // keep ~0.01 for gas
-    setEthAmount(amt > 0 ? amt.toFixed(6) : "");
-  }
-
   function handleManualEthInput(e: React.ChangeEvent<HTMLInputElement>) {
     setEthAmount(e.target.value);
     setCurrentPercentage(0);
@@ -557,6 +551,31 @@ function Page() {
     toast.success("Opening Facebook…");
   }
 
+  function handleSetPercentage(p: number) {
+    setCurrentPercentage(p);
+
+    // must have a balance and be connected
+    if (!isConnected || !address) {
+      toast.error("Connect your wallet first");
+      setEthAmount("");
+      return;
+    }
+
+    // if balance missing/zero, tell the user
+    if (!Number.isFinite(ethBalance) || ethBalance <= 0) {
+      toast.error("No ETH balance found");
+      setEthAmount("");
+      return;
+    }
+
+    // keep a small buffer for gas; clamp at 0
+    const GAS_BUFFER = 0.01;
+    const spendable = Math.max(0, ethBalance - GAS_BUFFER);
+    const amt = spendable * (p / 100);
+
+    setEthAmount(amt > 0 ? amt.toFixed(6) : "");
+  }
+
   /** spinner CSS */
   const spinnerCss = `
     @keyframes spin { from { transform: rotate(0deg);} to { transform: rotate(360deg);} }
@@ -787,7 +806,7 @@ function Page() {
                   value={ethAmount}
                   onChange={handleManualEthInput}
                   style={{
-                    width: "100%",
+                    width: "92%",
                     padding: 15,
                     border: "2px solid #a234fd",
                     borderRadius: 10,
