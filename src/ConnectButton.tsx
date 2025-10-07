@@ -9,7 +9,7 @@ export default function ConnectButton() {
   const { isConnected, address, status } = useAppKitAccount(); // address is the active account (EVM/Solana/Bitcoin depending on current ns)
   const { disconnect } = useDisconnect();
 
-  const [copied, setCopied] = useState(false);
+  // const [copied, setCopied] = useState(false);
 
   const shortAddr = useMemo(() => {
     if (!address) return "";
@@ -28,16 +28,16 @@ export default function ConnectButton() {
     open({ view: "Account" });
   };
 
-  const onCopy = async () => {
-    if (!address) return;
-    try {
-      await navigator.clipboard.writeText(address);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1200);
-    } catch {
-      // swallow
-    }
-  };
+  // const onCopy = async () => {
+  //   if (!address) return;
+  //   try {
+  //     await navigator.clipboard.writeText(address);
+  //     setCopied(true);
+  //     setTimeout(() => setCopied(false), 1200);
+  //   } catch {
+  //     // swallow
+  //   }
+  // };
 
   const onDisconnect = async () => {
     try {
@@ -76,15 +76,15 @@ export default function ConnectButton() {
       </button>
 
       <div className="account-actions">
-        <button onClick={onCopy} className="action">
+        {/* <button onClick={onCopy} className="action">
           <i className="fas fa-copy" />
           {copied ? "Copied!" : "Copy Address"}
-        </button>
+        </button> */}
 
-        <button onClick={onDisconnect} className="action danger">
+        {/* <button onClick={onDisconnect} className="action danger">
           <i className="fas fa-right-from-bracket" />
           Disconnect
-        </button>
+        </button> */}
       </div>
     </div>
   );

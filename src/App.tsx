@@ -7,10 +7,7 @@ function App() {
   return (
     <AppKitProvider>
       <Page />
-      <Toaster
-        position="top-center"
-        containerStyle={{ top: 20, bottom: "auto" }}
-      />
+      <Toaster />
     </AppKitProvider>
   );
 }

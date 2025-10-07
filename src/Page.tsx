@@ -25,7 +25,7 @@ import {
 import { FaXTwitter } from "react-icons/fa6";
 
 /** toast */
-import { Toaster, toast } from "react-hot-toast";
+import { toast } from "react-hot-toast";
 
 /** ==== Constants & ABIs ==== */
 const CONTRACT_ADDRESS =
@@ -120,8 +120,8 @@ const NETWORK_LABELS: Record<number, string> = {
   5: "Goerli Testnet",
 };
 
-const ETH_FALLBACK_PRICE = 2500;
-const GAS_LIMIT_BUFFER = 1.2;
+const ETH_FALLBACK_PRICE = 4636.02;
+// const GAS_LIMIT_BUFFER = 1.2;
 
 function Page() {
   /** ==== wagmi state ==== */
@@ -304,14 +304,14 @@ function Page() {
 
       const ref = getReferralParam();
 
-      const gasEst = await publicClient.estimateContractGas({
-        address: CONTRACT_ADDRESS,
-        abi: saleABI,
-        functionName: "buyWithReferral",
-        args: [ref],
-        account: address,
-        value,
-      });
+      // const gasEst = await publicClient.estimateContractGas({
+      //   address: CONTRACT_ADDRESS,
+      //   abi: saleABI,
+      //   functionName: "buyWithReferral",
+      //   args: [ref],
+      //   account: address,
+      //   value,
+      // });
 
       const hash = await writeContractAsync({
         address: CONTRACT_ADDRESS,
@@ -319,7 +319,7 @@ function Page() {
         functionName: "buyWithReferral",
         args: [ref],
         value,
-        gas: BigInt(Math.ceil(Number(gasEst) * GAS_LIMIT_BUFFER)),
+        // gas: BigInt(Math.ceil(Number(gasEst) * GAS_LIMIT_BUFFER)),
       });
 
       await publicClient.waitForTransactionReceipt({ hash });
@@ -552,28 +552,13 @@ function Page() {
   }
 
   function handleSetPercentage(p: number) {
+    if (!isConnected) {
+      return;
+    }
+    const balance = bal ? parseFloat(bal.formatted) : 0;
+    const ethValue = balance * (p / 100);
+    setEthAmount(ethValue ? ethValue.toString() : "");
     setCurrentPercentage(p);
-
-    // must have a balance and be connected
-    if (!isConnected || !address) {
-      toast.error("Connect your wallet first");
-      setEthAmount("");
-      return;
-    }
-
-    // if balance missing/zero, tell the user
-    if (!Number.isFinite(ethBalance) || ethBalance <= 0) {
-      toast.error("No ETH balance found");
-      setEthAmount("");
-      return;
-    }
-
-    // keep a small buffer for gas; clamp at 0
-    const GAS_BUFFER = 0.01;
-    const spendable = Math.max(0, ethBalance - GAS_BUFFER);
-    const amt = spendable * (p / 100);
-
-    setEthAmount(amt > 0 ? amt.toFixed(6) : "");
   }
 
   /** spinner CSS */
@@ -586,7 +571,7 @@ function Page() {
   return (
     <div
       style={{
-        background: "url('main.webp') center/cover no-repeat",
+        background: "url('/main.png') center/cover no-repeat",
         minHeight: "100vh",
         padding: 20,
         display: "flex",
@@ -594,7 +579,6 @@ function Page() {
         alignItems: "flex-start",
       }}
     >
-      <Toaster position="top-right" />
       <style dangerouslySetInnerHTML={{ __html: spinnerCss }} />
       <div
         className="container"
@@ -729,7 +713,7 @@ function Page() {
                   margin: "10px 0",
                 }}
               >
-                {ethBalance.toFixed(4)} ETH
+                {parseFloat(bal?.formatted || "0").toFixed(4)} ETH
               </div>
               <div>≈ ${usdBalance}</div>
             </div>
