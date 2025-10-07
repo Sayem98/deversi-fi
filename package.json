@@ -13,6 +13,7 @@
     "@reown/appkit": "^1.8.9",
     "@reown/appkit-adapter-wagmi": "^1.8.9",
     "@tanstack/react-query": "^5.90.2",
+    "buffer": "^6.0.3",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-hot-toast": "^2.6.0",
