@@ -11,13 +11,13 @@ import type { ReactNode } from "react";
 const queryClient = new QueryClient();
 
 // 1. Get projectId from https://dashboard.reown.com
-const projectId = "8e02b3ff6b1ea4bf1c0f5df1b2b9aa80";
+const projectId = "2be69bd0eac5c67818204d352753681f";
 
 // 2. Create a metadata object - optional
 const metadata = {
-  name: "AppKit",
-  description: "AppKit Example",
-  url: "https://example.com", // origin must match your domain & subdomain
+  name: "deversi-fi",
+  description: "A multi-chain DeFi app",
+  url: "https://diversifi-test.netlify.app", // origin must match your domain & subdomain
   icons: ["https://avatars.githubusercontent.com/u/179229932"],
 };
 
