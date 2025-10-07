@@ -551,13 +551,28 @@ function Page() {
     toast.success("Opening Facebook…");
   }
 
+  // function handleSetPercentage(p: number) {
+  //   if (!isConnected) {
+  //     return;
+  //   }
+  //   const balance = bal ? parseFloat(bal.formatted) : 0;
+  //   const ethValue = balance * (p / 100);
+  //   setEthAmount(ethValue ? ethValue.toFixed(8).toString() : "");
+  //   setCurrentPercentage(p);
+  // }
+
   function handleSetPercentage(p: number) {
-    if (!isConnected) {
-      return;
-    }
+    if (!isConnected) return;
+
     const balance = bal ? parseFloat(bal.formatted) : 0;
     const ethValue = balance * (p / 100);
-    setEthAmount(ethValue ? ethValue.toFixed(8).toString() : "");
+
+    // ✅ Limit to 8 decimals but remove trailing zeros
+    const formatted = ethValue
+      ? parseFloat(ethValue.toFixed(8)).toString()
+      : "";
+
+    setEthAmount(formatted);
     setCurrentPercentage(p);
   }
 
