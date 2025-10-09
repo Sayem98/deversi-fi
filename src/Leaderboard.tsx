@@ -365,9 +365,7 @@ export default function Leaderboard({
           </div>
         </div>
       ) : (
-        <div style={{ color: "#ccc", marginBottom: 10 }}>
-          Connect wallet to see your ranks.
-        </div>
+        <div style={{ color: "#ccc", marginBottom: 10 }}></div>
       )}
 
       {/* Header */}

@@ -21,6 +21,17 @@ const metadata = {
   icons: ["https://avatars.githubusercontent.com/u/179229932"],
 };
 
+// // 1. Get projectId from https://dashboard.reown.com
+// const projectId = "8e02b3ff6b1ea4bf1c0f5df1b2b9aa80";
+
+// // 2. Create a metadata object - optional
+// const metadata = {
+//   name: "DeversiFi",
+//   description: "A multi-chain DeFi app",
+//   url: "https://app.diversifiyourworld.com", // origin must match your domain & subdomain
+//   icons: ["https://avatars.githubusercontent.com/u/179229932"],
+// };
+
 const networks: [AppKitNetwork, ...AppKitNetwork[]] = [
   mainnet as AppKitNetwork,
   holesky as AppKitNetwork,
