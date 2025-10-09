@@ -72,6 +72,20 @@ const fmt = (n: number, digits = 4) =>
     ? n.toLocaleString(undefined, { maximumFractionDigits: digits })
     : "0";
 
+/** Small-screen detector */
+function useIsSmall(breakpoint = 520) {
+  const [isSmall, setIsSmall] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mq = window.matchMedia(`(max-width:${breakpoint}px)`);
+    const onChange = () => setIsSmall(mq.matches);
+    onChange();
+    mq.addEventListener?.("change", onChange);
+    return () => mq.removeEventListener?.("change", onChange);
+  }, [breakpoint]);
+  return isSmall;
+}
+
 /** ---------- Props ---------- */
 type LeaderboardProps = {
   contractAddress: Address;
@@ -89,8 +103,10 @@ export default function Leaderboard({
 }: LeaderboardProps) {
   const { address } = useAccount();
   const publicClient = usePublicClient();
+  const isSmall = useIsSmall(520);
 
-  const [tab, setTab] = useState<"volume" | "bonus" | "count">("volume");
+  // default to "bonus" since you want the first tab to be Bonus
+  const [tab, setTab] = useState<"bonus" | "volume" | "count">("bonus");
   const [rows, setRows] = useState<{ addr: Address; value: bigint }[]>([]);
   const [ranks, setRanks] = useState<{
     volume: bigint;
@@ -101,12 +117,12 @@ export default function Leaderboard({
   const [tokenDecimals, setTokenDecimals] = useState<number>(18);
   const [loading, setLoading] = useState<boolean>(true);
 
-  /** ---------- Styles (match your neon / glass UI) ---------- */
+  /** ---------- Styles (same look; responsive tweaks only) ---------- */
   const cardStyle: React.CSSProperties = {
     background: "rgba(15,15,15,0.45)",
     border: "1px solid #a234fd",
     borderRadius: 15,
-    padding: 25,
+    padding: isSmall ? 16 : 25,
     marginTop: 20,
     boxShadow: "0 0 20px #a234fd33",
     color: "#fff",
@@ -116,18 +132,25 @@ export default function Leaderboard({
   const headerCell: React.CSSProperties = {
     fontWeight: 700,
     color: "#a234fd",
-    padding: "10px 8px",
+    padding: isSmall ? "6px 4px" : "10px 8px",
+  };
+
+  const headerGridStyle: React.CSSProperties = {
+    display: "grid",
+    gridTemplateColumns: isSmall ? "1fr" : "60px 1fr 180px",
+    gap: 10,
+    padding: isSmall ? "0 0 6px 0" : "6px 0",
   };
 
   const rowStyle = (isYou: boolean): React.CSSProperties => ({
-    padding: "12px 8px",
+    padding: isSmall ? "10px 8px" : "12px 8px",
     background: isYou ? "rgba(162,52,253,0.15)" : "rgba(0,0,0,0.25)",
     border: "1px solid rgba(162,52,253,0.35)",
     borderRadius: 10,
     display: "grid",
-    gridTemplateColumns: "60px 1fr 180px",
-    alignItems: "center",
-    gap: 10,
+    gridTemplateColumns: isSmall ? "1fr" : "60px 1fr 180px",
+    alignItems: isSmall ? "start" : "center",
+    gap: isSmall ? 6 : 10,
   });
 
   const pill = (active: boolean) => ({
@@ -139,6 +162,18 @@ export default function Leaderboard({
     fontWeight: 700,
     cursor: "pointer",
   });
+
+  const avatarStyle: React.CSSProperties = {
+    width: isSmall ? 28 : 34,
+    height: isSmall ? 28 : 34,
+    borderRadius: "50%",
+    background: "rgba(162,52,253,0.3)",
+    border: "1px solid #a234fd88",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: isSmall ? 11 : 12,
+  };
 
   /** ---------- Converters ---------- */
   const toEth = (wei: bigint) => parseFloat(formatEther(wei));
@@ -195,7 +230,7 @@ export default function Leaderboard({
           };
         }
 
-        // top list by tab
+        // top list by tab (note: order preference only affects the buttons, not the calls)
         const fn =
           tab === "volume"
             ? "getTopReferrersByVolume"
@@ -235,38 +270,56 @@ export default function Leaderboard({
   const valueHeader = useMemo(
     () =>
       tab === "volume"
-        ? "Referred Volume (ETH)"
+        ? isSmall
+          ? "Volume (ETH)"
+          : "Referred Volume (ETH)"
         : tab === "bonus"
-        ? "Bonus Earned (TOKEN)"
+        ? isSmall
+          ? "Bonus (TOKEN)"
+          : "Bonus Earned (TOKEN)"
         : "Referral Count",
-    [tab]
+    [tab, isSmall]
   );
 
   return (
     <div style={cardStyle}>
-      {/* Title & Tabs */}
+      {/* Title */}
       <div
         style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 10,
-          marginBottom: 15,
+          textAlign: "center",
+          marginBottom: 8,
         }}
       >
         <div
-          style={{ fontSize: "1.3em", fontWeight: "bold", color: "#a234fd" }}
+          style={{
+            fontSize: "1.3em",
+            fontWeight: "bold",
+            color: "#a234fd",
+            marginBottom: 15,
+          }}
         >
           🏆 Leaderboard
         </div>
-        <div style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
+
+        {/* Tabs BELOW title, centered */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            gap: 10,
+            flexWrap: isSmall ? "wrap" : "nowrap",
+            marginBottom: 15,
+          }}
+        >
+          <button style={pill(tab === "bonus")} onClick={() => setTab("bonus")}>
+            Bonus
+          </button>
           <button
             style={pill(tab === "volume")}
             onClick={() => setTab("volume")}
           >
             Volume
-          </button>
-          <button style={pill(tab === "bonus")} onClick={() => setTab("bonus")}>
-            Bonus
           </button>
           <button style={pill(tab === "count")} onClick={() => setTab("count")}>
             Count
@@ -280,7 +333,7 @@ export default function Leaderboard({
           style={{
             marginBottom: 14,
             display: "grid",
-            gridTemplateColumns: "repeat(4, 1fr)",
+            gridTemplateColumns: isSmall ? "1fr 1fr" : "repeat(4, 1fr)",
             gap: 8,
             background: "rgba(0,0,0,0.25)",
             border: "1px solid #a234fd55",
@@ -318,17 +371,12 @@ export default function Leaderboard({
       )}
 
       {/* Header */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "60px 1fr 180px",
-          gap: 10,
-          padding: "6px 0",
-        }}
-      >
+      <div style={headerGridStyle}>
         <div style={headerCell}>Rank</div>
         <div style={headerCell}>Address</div>
-        <div style={{ ...headerCell, textAlign: "right" }}>{valueHeader}</div>
+        <div style={{ ...headerCell, textAlign: isSmall ? "left" : "right" }}>
+          {valueHeader}
+        </div>
       </div>
 
       {/* Rows */}
@@ -352,6 +400,43 @@ export default function Leaderboard({
                 ? toToken(r.value)
                 : Number(r.value);
 
+            if (isSmall) {
+              // Stacked layout on small screens
+              return (
+                <div key={`${r.addr}-${i}`} style={rowStyle(Boolean(isYou))}>
+                  <div
+                    style={{ display: "flex", alignItems: "center", gap: 10 }}
+                  >
+                    <div
+                      style={{
+                        fontWeight: 800,
+                        color: isYou ? "#fff" : "#e97451",
+                        minWidth: 36,
+                      }}
+                    >
+                      #{i + 1}
+                    </div>
+                    <div style={avatarStyle}>
+                      {short(r.addr).slice(2, 4).toUpperCase()}
+                    </div>
+                    <div style={{ fontWeight: isYou ? 800 : 600 }}>
+                      {short(r.addr)}{" "}
+                      {isYou && <span style={{ color: "#a234fd" }}>(You)</span>}
+                    </div>
+                  </div>
+                  <div
+                    style={{ marginTop: 6, textAlign: "left", fontWeight: 700 }}
+                  >
+                    {tab === "count"
+                      ? valueNum
+                      : fmt(valueNum, tab === "volume" ? 4 : 3)}{" "}
+                    {tab === "count" ? "" : tab === "volume" ? "ETH" : "TOKEN"}
+                  </div>
+                </div>
+              );
+            }
+
+            // Desktop/tablet 3-column layout
             return (
               <div key={`${r.addr}-${i}`} style={rowStyle(Boolean(isYou))}>
                 <div
@@ -360,19 +445,7 @@ export default function Leaderboard({
                   #{i + 1}
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <div
-                    style={{
-                      width: 34,
-                      height: 34,
-                      borderRadius: "50%",
-                      background: "rgba(162,52,253,0.3)",
-                      border: "1px solid #a234fd88",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: 12,
-                    }}
-                  >
+                  <div style={avatarStyle}>
                     {short(r.addr).slice(2, 4).toUpperCase()}
                   </div>
                   <div style={{ fontWeight: isYou ? 800 : 600 }}>
