@@ -72,7 +72,7 @@ const fmt = (n: number, digits = 4) =>
     ? n.toLocaleString(undefined, { maximumFractionDigits: digits })
     : "0";
 
-/** Small-screen detector */
+/** Small-screen detector (scale only; layout stays 3 columns) */
 function useIsSmall(breakpoint = 520) {
   const [isSmall, setIsSmall] = useState(false);
   useEffect(() => {
@@ -105,7 +105,6 @@ export default function Leaderboard({
   const publicClient = usePublicClient();
   const isSmall = useIsSmall(520);
 
-  // default to "bonus" since you want the first tab to be Bonus
   const [tab, setTab] = useState<"bonus" | "volume" | "count">("bonus");
   const [rows, setRows] = useState<{ addr: Address; value: bigint }[]>([]);
   const [ranks, setRanks] = useState<{
@@ -117,62 +116,121 @@ export default function Leaderboard({
   const [tokenDecimals, setTokenDecimals] = useState<number>(18);
   const [loading, setLoading] = useState<boolean>(true);
 
-  /** ---------- Styles (same look; responsive tweaks only) ---------- */
+  /** ---------- Styles (same look; overflow-safe) ---------- */
   const cardStyle: React.CSSProperties = {
     background: "rgba(15,15,15,0.45)",
     border: "1px solid #a234fd",
     borderRadius: 15,
-    padding: isSmall ? 16 : 25,
+    padding: isSmall ? 14 : 25,
     marginTop: 20,
     boxShadow: "0 0 20px #a234fd33",
     color: "#fff",
     backdropFilter: "blur(10px)",
+    overflow: "hidden",
+    boxSizing: "border-box",
+  };
+
+  const titleStyle: React.CSSProperties = {
+    fontSize: isSmall ? "1.1em" : "1.3em",
+    fontWeight: "bold",
+    color: "#a234fd",
+    marginBottom: isSmall ? 10 : 15,
   };
 
   const headerCell: React.CSSProperties = {
     fontWeight: 700,
     color: "#a234fd",
-    padding: isSmall ? "6px 4px" : "10px 8px",
+    padding: isSmall ? "4px 4px" : "10px 8px",
+    fontSize: isSmall ? 12 : 14,
+    minWidth: 0,
   };
+
+  // Keep 3 columns; make them fit by shrinking the last column on small screens
+  const thirdColWidth = isSmall ? "120px" : "180px";
+  const firstColWidth = "50px";
 
   const headerGridStyle: React.CSSProperties = {
     display: "grid",
-    gridTemplateColumns: isSmall ? "1fr" : "60px 1fr 180px",
-    gap: 10,
-    padding: isSmall ? "0 0 6px 0" : "6px 0",
+    gridTemplateColumns: `${firstColWidth} minmax(0,1fr) ${thirdColWidth}`,
+    gap: isSmall ? 6 : 10,
+    padding: isSmall ? "0 0 4px 0" : "6px 0",
   };
 
   const rowStyle = (isYou: boolean): React.CSSProperties => ({
-    padding: isSmall ? "10px 8px" : "12px 8px",
+    padding: isSmall ? "8px 6px" : "12px 8px",
     background: isYou ? "rgba(162,52,253,0.15)" : "rgba(0,0,0,0.25)",
     border: "1px solid rgba(162,52,253,0.35)",
     borderRadius: 10,
     display: "grid",
-    gridTemplateColumns: isSmall ? "1fr" : "60px 1fr 180px",
-    alignItems: isSmall ? "start" : "center",
+    gridTemplateColumns: `${firstColWidth} minmax(0,1fr) ${thirdColWidth}`,
+    alignItems: "center",
     gap: isSmall ? 6 : 10,
+    minWidth: 0,
   });
 
-  const pill = (active: boolean) => ({
-    padding: "10px 14px",
+  const valueCellStyle: React.CSSProperties = {
+    textAlign: "right",
+    fontWeight: 700,
+    fontSize: isSmall ? 12 : 14,
+    minWidth: 0,
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+  };
+
+  const addrWrapStyle: React.CSSProperties = {
+    display: "flex",
+    alignItems: "center",
+    gap: isSmall ? 6 : 10,
+    minWidth: 0, // allow flex child to shrink
+  };
+
+  const addrTextStyle: React.CSSProperties = {
+    fontWeight: 600,
+    fontSize: isSmall ? 12 : 14,
+    minWidth: 0,
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+  };
+
+  const rankStyle = (isYou: boolean): React.CSSProperties => ({
+    fontWeight: 800,
+    color: isYou ? "#fff" : "#e97451",
+    fontSize: isSmall ? 12 : 14,
+  });
+
+  const pill = (active: boolean): React.CSSProperties => ({
+    padding: isSmall ? "8px 12px" : "10px 14px",
     borderRadius: 999,
     border: "1px solid #a234fd",
     background: active ? "#a234fd" : "rgba(0,0,0,0.3)",
     color: "#fff",
     fontWeight: 700,
     cursor: "pointer",
+    fontSize: isSmall ? 12 : 14,
   });
 
+  const tabsWrapStyle: React.CSSProperties = {
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: isSmall ? 8 : 10,
+    flexWrap: "nowrap",
+    marginBottom: isSmall ? 12 : 15,
+  };
+
   const avatarStyle: React.CSSProperties = {
-    width: isSmall ? 28 : 34,
-    height: isSmall ? 28 : 34,
+    width: isSmall ? 24 : 34,
+    height: isSmall ? 24 : 34,
     borderRadius: "50%",
     background: "rgba(162,52,253,0.3)",
     border: "1px solid #a234fd88",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    fontSize: isSmall ? 11 : 12,
+    fontSize: isSmall ? 10 : 12,
+    flex: "0 0 auto",
   };
 
   /** ---------- Converters ---------- */
@@ -230,7 +288,7 @@ export default function Leaderboard({
           };
         }
 
-        // top list by tab (note: order preference only affects the buttons, not the calls)
+        // top list by tab
         const fn =
           tab === "volume"
             ? "getTopReferrersByVolume"
@@ -270,48 +328,20 @@ export default function Leaderboard({
   const valueHeader = useMemo(
     () =>
       tab === "volume"
-        ? isSmall
-          ? "Volume (ETH)"
-          : "Referred Volume (ETH)"
+        ? "Referred Volume (ETH)"
         : tab === "bonus"
-        ? isSmall
-          ? "Bonus (TOKEN)"
-          : "Bonus Earned (TOKEN)"
+        ? "Bonus Earned (TOKEN)"
         : "Referral Count",
-    [tab, isSmall]
+    [tab]
   );
 
   return (
     <div style={cardStyle}>
       {/* Title */}
-      <div
-        style={{
-          textAlign: "center",
-          marginBottom: 8,
-        }}
-      >
-        <div
-          style={{
-            fontSize: "1.3em",
-            fontWeight: "bold",
-            color: "#a234fd",
-            marginBottom: 15,
-          }}
-        >
-          🏆 Leaderboard
-        </div>
-
+      <div style={{ textAlign: "center", marginBottom: isSmall ? 6 : 8 }}>
+        <div style={titleStyle}>🏆 Leaderboard</div>
         {/* Tabs BELOW title, centered */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            gap: 10,
-            flexWrap: isSmall ? "wrap" : "nowrap",
-            marginBottom: 15,
-          }}
-        >
+        <div style={tabsWrapStyle}>
           <button style={pill(tab === "bonus")} onClick={() => setTab("bonus")}>
             Bonus
           </button>
@@ -331,63 +361,87 @@ export default function Leaderboard({
       {address && ranks ? (
         <div
           style={{
-            marginBottom: 14,
+            marginBottom: isSmall ? 10 : 14,
             display: "grid",
-            gridTemplateColumns: isSmall ? "1fr 1fr" : "repeat(4, 1fr)",
-            gap: 8,
+            gridTemplateColumns: "repeat(4, 1fr)",
+            gap: isSmall ? 6 : 8,
             background: "rgba(0,0,0,0.25)",
             border: "1px solid #a234fd55",
             borderRadius: 12,
-            padding: 10,
+            padding: isSmall ? 8 : 10,
           }}
         >
           <div>
-            <div style={{ color: "#ccc", fontSize: 12 }}>Your Volume Rank</div>
-            <div style={{ fontWeight: 800 }}>
+            <div style={{ color: "#ccc", fontSize: isSmall ? 10 : 12 }}>
+              Your Volume Rank
+            </div>
+            <div style={{ fontWeight: 800, fontSize: isSmall ? 12 : 14 }}>
               {ranks.volume > 0n ? `#${ranks.volume}` : "-"}
             </div>
           </div>
           <div>
-            <div style={{ color: "#ccc", fontSize: 12 }}>Your Bonus Rank</div>
-            <div style={{ fontWeight: 800 }}>
+            <div style={{ color: "#ccc", fontSize: isSmall ? 10 : 12 }}>
+              Your Bonus Rank
+            </div>
+            <div style={{ fontWeight: 800, fontSize: isSmall ? 12 : 14 }}>
               {ranks.bonus > 0n ? `#${ranks.bonus}` : "-"}
             </div>
           </div>
           <div>
-            <div style={{ color: "#ccc", fontSize: 12 }}>Your Count Rank</div>
-            <div style={{ fontWeight: 800 }}>
+            <div style={{ color: "#ccc", fontSize: isSmall ? 10 : 12 }}>
+              Your Count Rank
+            </div>
+            <div style={{ fontWeight: 800, fontSize: isSmall ? 12 : 14 }}>
               {ranks.count > 0n ? `#${ranks.count}` : "-"}
             </div>
           </div>
           <div>
-            <div style={{ color: "#ccc", fontSize: 12 }}>Total Tracked</div>
-            <div style={{ fontWeight: 800 }}>{ranks.total.toString()}</div>
+            <div style={{ color: "#ccc", fontSize: isSmall ? 10 : 12 }}>
+              Total Tracked
+            </div>
+            <div style={{ fontWeight: 800, fontSize: isSmall ? 12 : 14 }}>
+              {ranks.total.toString()}
+            </div>
           </div>
         </div>
       ) : (
-        <div style={{ color: "#ccc", marginBottom: 10 }}></div>
+        <div style={{ color: "#ccc", marginBottom: isSmall ? 8 : 10 }} />
       )}
 
-      {/* Header */}
+      {/* Header (always 3 columns; overflow-safe) */}
       <div style={headerGridStyle}>
         <div style={headerCell}>Rank</div>
-        <div style={headerCell}>Address</div>
-        <div style={{ ...headerCell, textAlign: isSmall ? "left" : "right" }}>
+        <div style={{ ...headerCell, minWidth: 0 }}>Address</div>
+        <div style={{ ...headerCell, textAlign: "right", minWidth: 0 }}>
           {valueHeader}
         </div>
       </div>
 
       {/* Rows */}
       {loading ? (
-        <div style={{ textAlign: "center", color: "#ccc", padding: 20 }}>
+        <div
+          style={{
+            textAlign: "center",
+            color: "#ccc",
+            padding: isSmall ? 14 : 20,
+            fontSize: isSmall ? 12 : 14,
+          }}
+        >
           Loading leaderboard…
         </div>
       ) : rows.length === 0 ? (
-        <div style={{ textAlign: "center", color: "#ccc", padding: 20 }}>
+        <div
+          style={{
+            textAlign: "center",
+            color: "#ccc",
+            padding: isSmall ? 14 : 20,
+            fontSize: isSmall ? 12 : 14,
+          }}
+        >
           No data yet.
         </div>
       ) : (
-        <div style={{ display: "grid", gap: 8 }}>
+        <div style={{ display: "grid", gap: isSmall ? 6 : 8 }}>
           {rows.map((r, i) => {
             const isYou =
               address && r.addr.toLowerCase() === address.toLowerCase();
@@ -398,60 +452,25 @@ export default function Leaderboard({
                 ? toToken(r.value)
                 : Number(r.value);
 
-            if (isSmall) {
-              // Stacked layout on small screens
-              return (
-                <div key={`${r.addr}-${i}`} style={rowStyle(Boolean(isYou))}>
-                  <div
-                    style={{ display: "flex", alignItems: "center", gap: 10 }}
-                  >
-                    <div
-                      style={{
-                        fontWeight: 800,
-                        color: isYou ? "#fff" : "#e97451",
-                        minWidth: 36,
-                      }}
-                    >
-                      #{i + 1}
-                    </div>
-                    <div style={avatarStyle}>
-                      {short(r.addr).slice(2, 4).toUpperCase()}
-                    </div>
-                    <div style={{ fontWeight: isYou ? 800 : 600 }}>
-                      {short(r.addr)}{" "}
-                      {isYou && <span style={{ color: "#a234fd" }}>(You)</span>}
-                    </div>
-                  </div>
-                  <div
-                    style={{ marginTop: 6, textAlign: "left", fontWeight: 700 }}
-                  >
-                    {tab === "count"
-                      ? valueNum
-                      : fmt(valueNum, tab === "volume" ? 4 : 3)}{" "}
-                    {tab === "count" ? "" : tab === "volume" ? "ETH" : "TOKEN"}
-                  </div>
-                </div>
-              );
-            }
-
-            // Desktop/tablet 3-column layout
             return (
               <div key={`${r.addr}-${i}`} style={rowStyle(Boolean(isYou))}>
-                <div
-                  style={{ fontWeight: 800, color: isYou ? "#fff" : "#e97451" }}
-                >
-                  #{i + 1}
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div style={rankStyle(Boolean(isYou))}>#{i + 1}</div>
+
+                <div style={addrWrapStyle}>
                   <div style={avatarStyle}>
                     {short(r.addr).slice(2, 4).toUpperCase()}
                   </div>
-                  <div style={{ fontWeight: isYou ? 800 : 600 }}>
+                  <div style={addrTextStyle}>
                     {short(r.addr)}{" "}
-                    {isYou && <span style={{ color: "#a234fd" }}>(You)</span>}
+                    {isYou && (
+                      <span style={{ color: "#a234fd", fontWeight: 700 }}>
+                        (You)
+                      </span>
+                    )}
                   </div>
                 </div>
-                <div style={{ textAlign: "right", fontWeight: 700 }}>
+
+                <div style={valueCellStyle}>
                   {tab === "count"
                     ? valueNum
                     : fmt(valueNum, tab === "volume" ? 4 : 3)}{" "}
