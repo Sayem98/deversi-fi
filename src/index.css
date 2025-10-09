@@ -1,0 +1,11 @@
+/* Make sure the body actually fills the viewport */
+html,
+body {
+  /* height: 100%; */
+  margin: 0;
+}
+
+body {
+  /* valid shorthand; no quotes; note the spaces around the slash */
+  background: url("/main.png") center / cover no-repeat;
+}

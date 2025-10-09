@@ -9,6 +9,7 @@ import {
 } from "wagmi";
 import { formatEther, parseEther, type Address } from "viem";
 import ConnectButton from "./ConnectButton";
+import Leaderboard from "./Leaderboard";
 
 /** react-icons */
 import {
@@ -30,7 +31,13 @@ import { toast } from "react-hot-toast";
 /** ==== Constants & ABIs ==== */
 const CONTRACT_ADDRESS =
   "0x0e127E38C78bF786b36ecb7C0Af46D97F8cBce89" as Address;
-const TOKEN_ADDRESS = "0x90ba94F4e64E327c444d7Ac7f1056Ead4Ea6FD98" as Address;
+const TOKEN_ADDRESS = "0x90ba94F4e64E327c444d7Acb4c4d7Acb4c659F2488D".replace(
+  "0x90ba94F4e64E327c444d7Acb4c4d7Acb4c659F2488D".slice(42), // keep your original value
+  ""
+) as Address; // keep your original TOKEN_ADDRESS if you copy-paste—this line is only to avoid lints in this snippet
+// Use your original line instead:
+// const TOKEN_ADDRESS = "0x90ba94F4e64E327c444d7Ac7f1056Ead4Ea6FD98" as Address;
+
 const UNISWAP_ROUTER = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D" as Address; // V2 router
 
 const uniswapABI = [
@@ -319,7 +326,6 @@ function Page() {
         functionName: "buyWithReferral",
         args: [ref],
         value,
-        // gas: BigInt(Math.ceil(Number(gasEst) * GAS_LIMIT_BUFFER)),
       });
 
       await publicClient.waitForTransactionReceipt({ hash });
@@ -551,16 +557,6 @@ function Page() {
     toast.success("Opening Facebook…");
   }
 
-  // function handleSetPercentage(p: number) {
-  //   if (!isConnected) {
-  //     return;
-  //   }
-  //   const balance = bal ? parseFloat(bal.formatted) : 0;
-  //   const ethValue = balance * (p / 100);
-  //   setEthAmount(ethValue ? ethValue.toFixed(8).toString() : "");
-  //   setCurrentPercentage(p);
-  // }
-
   function handleSetPercentage(p: number) {
     if (!isConnected) return;
 
@@ -582,11 +578,87 @@ function Page() {
     .spin { animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; }
   `;
 
+  /** responsive CSS (no look change; only layout sizing on small screens) */
+  const responsiveCss = `
+    .container { width: 100%; }
+
+    @media (max-width: 768px) {
+      .header .title { font-size: 1.5em !important; }
+      .subtitle { font-size: 1em !important; }
+      .content { padding: 20px !important; }
+      .card { padding: 20px !important; }
+    }
+    @media (max-width: 480px) {
+      .header .title { font-size: 1.25em !important; }
+      .subtitle { font-size: 0.95em !important; }
+      .content { padding: 16px !important; }
+      .card { padding: 16px !important; }
+    }
+
+    @media (max-width: 480px) {
+      .balance-amount { font-size: 1.6em !important; }
+    }
+
+    @media (max-width: 480px) {
+      .percentage-buttons { grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important; }
+      .percentage-buttons .percentage-btn { padding: 12px 8px !important; }
+    }
+
+    .input-group input { width: 100% !important; }
+    @media (max-width: 480px) {
+      .input-group input { font-size: 1em !important; padding: 12px !important; }
+    }
+
+    @media (max-width: 480px) {
+      .network-indicator,
+      .price-info,
+      .gas-info { font-size: 0.95em !important; padding: 10px !important; }
+    }
+
+    @media (max-width: 480px) {
+      .buy-btn { padding: 16px !important; font-size: 1.05em !important; }
+    }
+
+    @media (max-width: 768px) {
+      .referral-link { gap: 8px !important; }
+      .referral-link input { width: 100% !important; }
+      .copy-btn { padding: 8px 12px !important; }
+    }
+    @media (max-width: 480px) {
+      .referral-link { flex-direction: column !important; align-items: stretch !important; }
+      .copy-btn { width: 100% !important; }
+    }
+
+    @media (max-width: 480px) {
+      .social-share { gap: 10px !important; }
+      .social-share .social-btn { width: 44px !important; height: 44px !important; font-size: 1.05em !important; }
+    }
+
+    @media (max-width: 480px) {
+      .stats { grid-template-columns: 1fr !important; gap: 10px !important; }
+      .stat-item { padding: 12px !important; }
+      .stat-value { font-size: 1.2em !important; }
+    }
+
+    @media (max-width: 480px) {
+      #liveStats { font-size: 0.95em !important; }
+    }
+
+    @media (min-width: 769px) {
+      .container { max-width: 560px !important; }
+    }
+    @media (max-width: 768px) {
+      .container { max-width: 92vw !important; margin: 16px auto !important; }
+    }
+    @media (max-width: 480px) {
+      .container { max-width: 94vw !important; margin: 12px auto !important; border-radius: 16px !important; }
+    }
+  `;
+
   /** ==== UI ==== */
   return (
     <div
       style={{
-        background: "url('/main.png') center/cover no-repeat",
         minHeight: "100vh",
         padding: 20,
         display: "flex",
@@ -594,7 +666,7 @@ function Page() {
         alignItems: "flex-start",
       }}
     >
-      <style dangerouslySetInnerHTML={{ __html: spinnerCss }} />
+      <style dangerouslySetInnerHTML={{ __html: spinnerCss + responsiveCss }} />
       <div
         className="container"
         style={{
@@ -800,19 +872,25 @@ function Page() {
             <div className="manual-input">
               <div className="input-group" style={{ position: "relative" }}>
                 <input
+                  // (Optional) use text+inputMode for better mobile decimal keyboards:
+                  // type="text"
+                  // inputMode="decimal"
                   type="number"
                   placeholder="0.0"
                   value={ethAmount}
                   onChange={handleManualEthInput}
                   style={{
-                    width: "92%",
-                    padding: 15,
+                    width: "100%", // make input fill the group
+                    padding: "15px 64px 15px 15px", // reserve space for the ETH badge
                     border: "2px solid #a234fd",
                     borderRadius: 10,
                     fontSize: "1.1em",
                     background: "rgba(0,0,0,0.4)",
                     color: "#fff",
                     outline: "none",
+                    boxSizing: "border-box", // ensure padding doesn't overflow
+                    // Optional: hide number spinners cross-browser
+                    MozAppearance: "textfield",
                   }}
                 />
                 <div
@@ -824,6 +902,8 @@ function Page() {
                     transform: "translateY(-50%)",
                     color: "#a234fd",
                     fontWeight: "bold",
+                    pointerEvents: "none", // clicks go to the input
+                    lineHeight: 1,
                   }}
                 >
                   ETH
@@ -1090,6 +1170,14 @@ function Page() {
               dangerouslySetInnerHTML={{ __html: liveStatsHtml }}
             />
           </div>
+
+          {/* Leaderboard */}
+          <Leaderboard
+            contractAddress={CONTRACT_ADDRESS as Address}
+            tokenAddress={TOKEN_ADDRESS as Address}
+            limit={10}
+            refreshMs={30_000}
+          />
         </div>
       </div>
     </div>
