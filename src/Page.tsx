@@ -65,6 +65,18 @@ const uniswapABI = [
 const saleABI = [
   {
     inputs: [{ internalType: "address", name: "referrer", type: "address" }],
+    name: "getReferrerRank",
+    outputs: [
+      { internalType: "uint256", name: "volumeRank", type: "uint256" },
+      { internalType: "uint256", name: "bonusRank", type: "uint256" },
+      { internalType: "uint256", name: "countRank", type: "uint256" },
+      { internalType: "uint256", name: "totalReferrers", type: "uint256" },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "address", name: "referrer", type: "address" }],
     name: "buyWithReferral",
     outputs: [],
     stateMutability: "payable",
@@ -176,6 +188,12 @@ function Page() {
     "Connect wallet to see live stats..."
   );
 
+  // detailed rank categories (optional internal state)
+  const [rankVol, setRankVol] = useState<number | null>(null);
+  const [rankBonus, setRankBonus] = useState<number | null>(null);
+  const [rankCount, setRankCount] = useState<number | null>(null);
+  const [rankTotal, setRankTotal] = useState<number | null>(null);
+
   const networkInfo = isConnected
     ? `Connected to: ${NETWORK_LABELS[chainId] || "Unknown"}`
     : "Please connect your wallet";
@@ -220,6 +238,7 @@ function Page() {
         updateTokenPrice(),
         updateGasEstimation(),
         updateUserStats(),
+        updateRank(), // <- fetch on-chain rank on connect
       ]);
       handleSetPercentage(100);
       setBuyDisabled(false);
@@ -234,6 +253,43 @@ function Page() {
     const amt = parseFloat(ethAmount || "0");
     setTokenEstimate(Math.floor(amt * (tokenPerEth || 1000)));
   }, [ethAmount, tokenPerEth]);
+
+  /** ==== Helpers / Rank ==== */
+  const formatRank = (r?: bigint | number | null) => {
+    if (!r) return "-";
+    const n = typeof r === "bigint" ? Number(r) : r;
+    return n === 0 ? "-" : `#${n}`;
+  };
+
+  async function updateRank() {
+    try {
+      if (!publicClient || !address) return;
+      const [vol, bon, cnt, total] = (await publicClient.readContract({
+        address: CONTRACT_ADDRESS,
+        abi: saleABI,
+        functionName: "getReferrerRank",
+        args: [address],
+      })) as readonly [bigint, bigint, bigint, bigint];
+
+      const nVol = Number(vol);
+      const nBon = Number(bon);
+      const nCnt = Number(cnt);
+      const nTot = Number(total);
+
+      setRankVol(nVol);
+      setRankBonus(nBon);
+      setRankCount(nCnt);
+      setRankTotal(nTot);
+
+      // pick the best (lowest) non-zero rank to show as Your Rank
+      const pool = [nVol, nBon, nCnt].filter((x) => x > 0);
+      const best = pool.length ? Math.min(...pool) : 0;
+      setYourRank(best > 0 ? `#${best}${nTot ? ` / ${nTot}` : ""}` : "-");
+    } catch (e) {
+      console.error("updateRank:", e);
+      setYourRank("-");
+    }
+  }
 
   /** ==== Handlers ==== */
   async function updateTokenPrice() {
@@ -351,6 +407,7 @@ function Page() {
         updateTokenPrice(),
         updateUserStats(),
         updateLiveStats(),
+        updateRank(), // <- refresh rank after purchase
       ]);
     } catch (err: any) {
       setLoadingTx(false);
@@ -424,6 +481,7 @@ function Page() {
       setTotalEarned(parseFloat(formatEther(r.totalBonus)).toFixed(3));
       setReferralsCount((r.referralCount ?? 0n).toString());
 
+      // this old local-rank placeholder is kept as backup (but will be overwritten by updateRank)
       const v = parseFloat(formatEther(r.totalVolume ?? 0n));
       setYourRank(v > 0 ? `#${Math.max(1, Math.floor(1000 / v))}` : "-");
     } catch (e) {
@@ -1146,6 +1204,7 @@ function Page() {
             <StatBox value={totalEarned} label="Total Earned" />
             <StatBox value={referralsCount} label="Referrals" />
             <StatBox value={totalVolume} label="Total Volume" />
+            {/* Your Rank shows best (lowest) rank across Volume/Bonus/Count and includes / total */}
             <StatBox value={yourRank} label="Your Rank" />
           </div>
 
