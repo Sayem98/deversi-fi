@@ -189,10 +189,10 @@ function Page() {
   );
 
   // detailed rank categories (optional internal state)
-  const [rankVol, setRankVol] = useState<number | null>(null);
-  const [rankBonus, setRankBonus] = useState<number | null>(null);
-  const [rankCount, setRankCount] = useState<number | null>(null);
-  const [rankTotal, setRankTotal] = useState<number | null>(null);
+  const [_rankVol, setRankVol] = useState<number | null>(null);
+  const [_rankBonus, setRankBonus] = useState<number | null>(null);
+  const [_rankCount, setRankCount] = useState<number | null>(null);
+  const [_rankTotal, setRankTotal] = useState<number | null>(null);
 
   const networkInfo = isConnected
     ? `Connected to: ${NETWORK_LABELS[chainId] || "Unknown"}`
@@ -255,11 +255,11 @@ function Page() {
   }, [ethAmount, tokenPerEth]);
 
   /** ==== Helpers / Rank ==== */
-  const formatRank = (r?: bigint | number | null) => {
-    if (!r) return "-";
-    const n = typeof r === "bigint" ? Number(r) : r;
-    return n === 0 ? "-" : `#${n}`;
-  };
+  // const formatRank = (r?: bigint | number | null) => {
+  //   if (!r) return "-";
+  //   const n = typeof r === "bigint" ? Number(r) : r;
+  //   return n === 0 ? "-" : `#${n}`;
+  // };
 
   async function updateRank() {
     try {
