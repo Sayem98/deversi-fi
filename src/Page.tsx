@@ -65,6 +65,18 @@ const uniswapABI = [
 const saleABI = [
   {
     inputs: [{ internalType: "address", name: "referrer", type: "address" }],
+    name: "getReferrerRank",
+    outputs: [
+      { internalType: "uint256", name: "volumeRank", type: "uint256" },
+      { internalType: "uint256", name: "bonusRank", type: "uint256" },
+      { internalType: "uint256", name: "countRank", type: "uint256" },
+      { internalType: "uint256", name: "totalReferrers", type: "uint256" },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "address", name: "referrer", type: "address" }],
     name: "buyWithReferral",
     outputs: [],
     stateMutability: "payable",

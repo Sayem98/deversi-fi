@@ -90,91 +90,10 @@ function useIsSmall(breakpoint = 520) {
 type LeaderboardProps = {
   contractAddress: Address;
   tokenAddress: Address;
-  limit?: number; // default 10 for compact card
-  refreshMs?: number; // default 30000
-  fullLimit?: number; // default 50 for modal
+  limit?: number; // compact list size (default 10)
+  refreshMs?: number; // polling (default 30000)
+  fullLimit?: number; // expanded list size (default 50)
 };
-
-/** ---------- Simple Modal ---------- */
-function Modal({
-  open,
-  onClose,
-  title,
-  children,
-}: {
-  open: boolean;
-  onClose: () => void;
-  title: string;
-  children: React.ReactNode;
-}) {
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [open, onClose]);
-
-  if (!open) return null;
-
-  const overlay: React.CSSProperties = {
-    position: "fixed",
-    inset: 0,
-    background: "rgba(0,0,0,0.55)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    zIndex: 9999,
-    padding: 16,
-  };
-  const panel: React.CSSProperties = {
-    width: "100%",
-    maxWidth: 820,
-    maxHeight: "84vh",
-    overflow: "auto",
-    background: "rgba(15,15,15,0.9)",
-    border: "1px solid #a234fd",
-    borderRadius: 16,
-    boxShadow: "0 0 30px #a234fd44",
-    color: "#fff",
-  };
-  const header: React.CSSProperties = {
-    position: "sticky",
-    top: 0,
-    background: "rgba(15,15,15,0.95)",
-    borderBottom: "1px solid #a234fd55",
-    padding: "14px 18px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    zIndex: 1,
-  };
-  const body: React.CSSProperties = { padding: 18 };
-  const closeBtn: React.CSSProperties = {
-    border: "1px solid #a234fd",
-    background: "transparent",
-    color: "#fff",
-    borderRadius: 10,
-    padding: "6px 10px",
-    cursor: "pointer",
-    fontWeight: 700,
-  };
-
-  return (
-    <div style={overlay} onClick={onClose}>
-      <div style={panel} onClick={(e) => e.stopPropagation()}>
-        <div style={header}>
-          <div style={{ fontWeight: 800, color: "#a234fd" }}>{title}</div>
-          <button style={closeBtn} onClick={onClose}>
-            ✕
-          </button>
-        </div>
-        <div style={body}>{children}</div>
-      </div>
-    </div>
-  );
-}
 
 /** ---------- Component ---------- */
 export default function Leaderboard({
@@ -199,15 +118,15 @@ export default function Leaderboard({
   const [tokenDecimals, setTokenDecimals] = useState<number>(18);
   const [loading, setLoading] = useState<boolean>(true);
 
-  // Modal states
-  const [modalOpen, setModalOpen] = useState(false);
-  const [modalRows, setModalRows] = useState<
+  // Expanded state (in-place, scrollable)
+  const [expanded, setExpanded] = useState(false);
+  const [expandedRows, setExpandedRows] = useState<
     { addr: Address; value: bigint }[]
   >([]);
-  const [modalLoading, setModalLoading] = useState(false);
-  const modalReqId = useRef(0); // guard stale async
+  const [expandedLoading, setExpandedLoading] = useState(false);
+  const expandReqId = useRef(0); // guard stale async
 
-  /** ---------- Styles (same look; overflow-safe) ---------- */
+  /** ---------- Styles ---------- */
   const cardStyle: React.CSSProperties = {
     background: "rgba(15,15,15,0.45)",
     border: "1px solid #a234fd",
@@ -237,7 +156,6 @@ export default function Leaderboard({
     minWidth: 0,
   };
 
-  // Keep 3 columns; make them fit by shrinking the last column on small screens
   const thirdColWidth = isSmall ? "120px" : "180px";
   const firstColWidth = "50px";
 
@@ -274,7 +192,7 @@ export default function Leaderboard({
     display: "flex",
     alignItems: "center",
     gap: isSmall ? 6 : 10,
-    minWidth: 0, // allow flex child to shrink
+    minWidth: 0,
   };
 
   const addrTextStyle: React.CSSProperties = {
@@ -325,20 +243,34 @@ export default function Leaderboard({
     flex: "0 0 auto",
   };
 
-  // const seeMoreBtn: React.CSSProperties = {
-  //   marginTop: isSmall ? 10 : 12,
-  //   display: "block",
-  //   marginLeft: "auto",
-  //   marginRight: "auto",
-  //   padding: isSmall ? "8px 14px" : "10px 16px",
-  //   borderRadius: 999,
-  //   border: "1px solid #a234fd",
-  //   background: "rgba(0,0,0,0.3)",
-  //   color: "#fff",
-  //   fontWeight: 800,
-  //   cursor: "pointer",
-  //   fontSize: isSmall ? 12 : 14,
-  // };
+  const seeMoreBtn: React.CSSProperties = {
+    marginTop: isSmall ? 10 : 12,
+    display: "block",
+    marginLeft: "auto",
+    marginRight: "auto",
+    padding: isSmall ? "8px 14px" : "10px 16px",
+    borderRadius: 999,
+    border: "1px solid #a234fd",
+    background: "rgba(0,0,0,0.3)",
+    color: "#fff",
+    fontWeight: 800,
+    cursor: "pointer",
+    fontSize: isSmall ? 12 : 14,
+  };
+
+  const showLessBtn: React.CSSProperties = {
+    ...seeMoreBtn,
+    borderColor: "#a234fd",
+  };
+
+  const scrollWrapStyle: React.CSSProperties = expanded
+    ? {
+        // scroll only in expanded mode
+        maxHeight: isSmall ? "60vh" : "50vh",
+        overflowY: "auto",
+        paddingRight: 2,
+      }
+    : {};
 
   /** ---------- Converters ---------- */
   const toEth = (wei: bigint) => parseFloat(formatEther(wei));
@@ -391,7 +323,7 @@ export default function Leaderboard({
     return { addrs, vals };
   };
 
-  /** ---------- Fetch leaderboard + ranks (card) ---------- */
+  /** ---------- Fetch compact leaderboard + ranks ---------- */
   useEffect(() => {
     let alive = true;
     const run = async () => {
@@ -443,62 +375,60 @@ export default function Leaderboard({
     };
   }, [publicClient, address, contractAddress, tab, limit, refreshMs]);
 
-  /** ---------- Modal open: fetch larger list (seed + guard) ---------- */
-  // const openModal = async () => {
-  //   // seed modal with current list so it never appears empty
-  //   setModalRows(rows);
-  //   setModalOpen(true);
+  /** ---------- Expand actions ---------- */
+  const expandList = async () => {
+    // show compact rows immediately while fetching full list
+    setExpanded(true);
+    setExpandedRows(rows);
 
-  //   const tabAtOpen = tab; // capture to avoid race with tab switches
+    if (!publicClient) return;
+    setExpandedLoading(true);
+    const myId = ++expandReqId.current;
+    try {
+      const { addrs, vals } = await fetchRows(tab, fullLimit);
+      if (myId !== expandReqId.current) return; // ignore stale
+      if (addrs.length > 0) {
+        setExpandedRows(
+          addrs.map((a, i) => ({ addr: a, value: vals[i] ?? 0n }))
+        );
+      } // else keep compact rows
+    } catch (e) {
+      console.error("Expanded load error:", e);
+      // keep compact rows
+    } finally {
+      if (myId === expandReqId.current) setExpandedLoading(false);
+    }
+  };
 
-  //   if (!publicClient) return;
-  //   setModalLoading(true);
+  const collapseList = () => {
+    setExpanded(false);
+    setExpandedRows([]);
+    setExpandedLoading(false);
+    expandReqId.current++;
+  };
 
-  //   const myId = ++modalReqId.current; // guard against stale responses
-  //   try {
-  //     const { addrs, vals } = await fetchRows(tabAtOpen, fullLimit);
-  //     if (myId !== modalReqId.current) return; // ignore stale
-
-  //     if (addrs.length > 0) {
-  //       setModalRows(addrs.map((a, i) => ({ addr: a, value: vals[i] ?? 0n })));
-  //     } else {
-  //       console.warn("Full list returned empty; keeping compact rows.");
-  //     }
-  //   } catch (e) {
-  //     console.error("Modal load error:", e);
-  //     // keep seeded rows
-  //   } finally {
-  //     if (myId === modalReqId.current) setModalLoading(false);
-  //   }
-  // };
-
-  /** ---------- If tab changes while modal open, refresh modal ---------- */
+  /** Refresh expanded rows if tab changes while expanded */
   useEffect(() => {
-    if (!modalOpen || !publicClient) return;
+    if (!expanded || !publicClient) return;
 
-    const myId = ++modalReqId.current;
-    setModalLoading(true);
-
+    const myId = ++expandReqId.current;
+    setExpandedLoading(true);
     (async () => {
       try {
         const { addrs, vals } = await fetchRows(tab, fullLimit);
-        if (myId !== modalReqId.current) return;
+        if (myId !== expandReqId.current) return;
         if (addrs.length > 0) {
-          setModalRows(
+          setExpandedRows(
             addrs.map((a, i) => ({ addr: a, value: vals[i] ?? 0n }))
-          );
-        } else {
-          console.warn(
-            "Tab refresh returned empty; keeping previous modalRows."
           );
         }
       } catch (e) {
-        console.error("Modal tab refresh error:", e);
+        console.error("Expanded tab refresh error:", e);
       } finally {
-        if (myId === modalReqId.current) setModalLoading(false);
+        if (myId === expandReqId.current) setExpandedLoading(false);
       }
     })();
-  }, [modalOpen, tab, fullLimit, publicClient]);
+  }, [expanded, tab, fullLimit, publicClient]);
 
   /** ---------- Derived ---------- */
   const valueHeader = useMemo(
@@ -549,169 +479,109 @@ export default function Leaderboard({
     );
   };
 
+  const displayedRows = expanded
+    ? expandedRows.length
+      ? expandedRows
+      : rows
+    : rows;
+
   return (
-    <>
-      <div style={cardStyle}>
-        {/* Title */}
-        <div style={{ textAlign: "center", marginBottom: isSmall ? 6 : 8 }}>
-          <div style={titleStyle}>🏆 Leaderboard</div>
-          {/* Tabs BELOW title, centered */}
-          <div style={tabsWrapStyle}>
-            <button
-              style={pill(tab === "bonus")}
-              onClick={() => setTab("bonus")}
-            >
-              Bonus
-            </button>
-            <button
-              style={pill(tab === "volume")}
-              onClick={() => setTab("volume")}
-            >
-              Volume
-            </button>
-            <button
-              style={pill(tab === "count")}
-              onClick={() => setTab("count")}
-            >
-              Count
-            </button>
-          </div>
+    <div style={cardStyle}>
+      {/* Title + Tabs */}
+      <div style={{ marginBottom: isSmall ? 6 : 8 }}>
+        <div style={titleStyle}>🏆 Leaderboard</div>
+        <div style={tabsWrapStyle}>
+          <button style={pill(tab === "bonus")} onClick={() => setTab("bonus")}>
+            Bonus
+          </button>
+          <button
+            style={pill(tab === "volume")}
+            onClick={() => setTab("volume")}
+          >
+            Volume
+          </button>
+          <button style={pill(tab === "count")} onClick={() => setTab("count")}>
+            Count
+          </button>
         </div>
-
-        {/* Your Ranks */}
-        {address && ranks ? (
-          <div
-          // style={{
-          //   marginBottom: isSmall ? 10 : 14,
-          //   display: "grid",
-          //   gridTemplateColumns: "repeat(4, 1fr)",
-          //   gap: isSmall ? 6 : 8,
-          //   background: "rgba(0,0,0,0.25)",
-          //   border: "1px solid #a234fd55",
-          //   borderRadius: 12,
-          //   padding: isSmall ? 8 : 10,
-          // }}
-          >
-            {/* <div>
-              <div style={{ color: "#ccc", fontSize: isSmall ? 10 : 12 }}>
-                Your Volume Rank
-              </div>
-              <div style={{ fontWeight: 800, fontSize: isSmall ? 12 : 14 }}>
-                {ranks.volume > 0n ? `#${ranks.volume}` : "-"}
-              </div>
-            </div>
-            <div>
-              <div style={{ color: "#ccc", fontSize: isSmall ? 10 : 12 }}>
-                Your Bonus Rank
-              </div>
-              <div style={{ fontWeight: 800, fontSize: isSmall ? 12 : 14 }}>
-                {ranks.bonus > 0n ? `#${ranks.bonus}` : "-"}
-              </div>
-            </div>
-            <div>
-              <div style={{ color: "#ccc", fontSize: isSmall ? 10 : 12 }}>
-                Your Count Rank
-              </div>
-              <div style={{ fontWeight: 800, fontSize: isSmall ? 12 : 14 }}>
-                {ranks.count > 0n ? `#${ranks.count}` : "-"}
-              </div>
-            </div>
-            <div>
-              <div style={{ color: "#ccc", fontSize: isSmall ? 10 : 12 }}>
-                Total Tracked
-              </div>
-              <div style={{ fontWeight: 800, fontSize: isSmall ? 12 : 14 }}>
-                {ranks.total.toString()}
-              </div>
-            </div> */}
-          </div>
-        ) : (
-          <div style={{ color: "#ccc", marginBottom: isSmall ? 8 : 10 }} />
-        )}
-
-        {/* Header */}
-        <div style={headerGridStyle}>
-          <div style={headerCell}>Rank</div>
-          <div style={{ ...headerCell, minWidth: 0 }}>Address</div>
-          <div style={{ ...headerCell, textAlign: "right", minWidth: 0 }}>
-            {valueHeader}
-          </div>
-        </div>
-
-        {/* Rows */}
-        {loading ? (
-          <div
-            style={{
-              textAlign: "center",
-              color: "#ccc",
-              padding: isSmall ? 14 : 20,
-              fontSize: isSmall ? 12 : 14,
-            }}
-          >
-            Loading leaderboard…
-          </div>
-        ) : rows.length === 0 ? (
-          <div
-            style={{
-              textAlign: "center",
-              color: "#ccc",
-              padding: isSmall ? 14 : 20,
-              fontSize: isSmall ? 12 : 14,
-            }}
-          >
-            No data yet.
-          </div>
-        ) : (
-          <>
-            <div style={{ display: "grid", gap: isSmall ? 6 : 8 }}>
-              {rows.map((r, i) => renderRow(r, i, true))}
-            </div>
-
-            {/* See more button */}
-            {/* <button style={seeMoreBtn} onClick={openModal}>
-              See more
-            </button> */}
-          </>
-        )}
       </div>
 
-      {/* Modal with full list */}
-      <Modal
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-        title={`Full Leaderboard • ${
-          tab === "bonus" ? "Bonus" : tab === "volume" ? "Volume" : "Count"
-        }`}
-      >
-        {/* Header duplicate for modal */}
-        <div style={headerGridStyle}>
-          <div style={headerCell}>Rank</div>
-          <div style={{ ...headerCell, minWidth: 0 }}>Address</div>
-          <div style={{ ...headerCell, textAlign: "right", minWidth: 0 }}>
-            {valueHeader}
-          </div>
-        </div>
+      {/* (Optional) Ranks panel — you can re-enable if you want */}
+      {address && ranks ? (
+        <div style={{ marginBottom: isSmall ? 10 : 14 }} />
+      ) : (
+        <div style={{ color: "#ccc", marginBottom: isSmall ? 8 : 10 }} />
+      )}
 
-        {/* Always render something: fallback to compact rows if modalRows empty */}
-        {modalLoading && (
+      {/* Header */}
+      <div style={headerGridStyle}>
+        <div style={headerCell}>Rank</div>
+        <div style={{ ...headerCell, minWidth: 0 }}>Address</div>
+        <div style={{ ...headerCell, textAlign: "right", minWidth: 0 }}>
+          {valueHeader}
+        </div>
+      </div>
+
+      {/* Rows */}
+      {loading ? (
+        <div
+          style={{
+            textAlign: "center",
+            color: "#ccc",
+            padding: isSmall ? 14 : 20,
+            fontSize: isSmall ? 12 : 14,
+          }}
+        >
+          Loading leaderboard…
+        </div>
+      ) : rows.length === 0 ? (
+        <div
+          style={{
+            textAlign: "center",
+            color: "#ccc",
+            padding: isSmall ? 14 : 20,
+            fontSize: isSmall ? 12 : 14,
+          }}
+        >
+          No data yet.
+        </div>
+      ) : (
+        <>
           <div
             style={{
-              textAlign: "center",
-              color: "#ccc",
-              padding: 16,
-              fontSize: 14,
+              display: "grid",
+              gap: isSmall ? 6 : 8,
+              ...scrollWrapStyle,
             }}
           >
-            Loading full list…
+            {displayedRows.map((r, i) => renderRow(r, i, true))}
           </div>
-        )}
 
-        <div style={{ display: "grid", gap: 8 }}>
-          {(modalRows.length ? modalRows : rows).map((r, i) =>
-            renderRow(r, i, true)
+          {!expanded ? (
+            <button style={seeMoreBtn} onClick={expandList}>
+              See more
+            </button>
+          ) : (
+            <>
+              {expandedLoading && (
+                <div
+                  style={{
+                    textAlign: "center",
+                    color: "#ccc",
+                    padding: 10,
+                    fontSize: 12,
+                  }}
+                >
+                  Loading full list…
+                </div>
+              )}
+              <button style={showLessBtn} onClick={collapseList}>
+                Show less
+              </button>
+            </>
           )}
-        </div>
-      </Modal>
-    </>
+        </>
+      )}
+    </div>
   );
 }
