@@ -226,6 +226,7 @@ export default function Leaderboard({
     fontWeight: "bold",
     color: "#a234fd",
     marginBottom: isSmall ? 10 : 15,
+    textAlign: isSmall ? "center" : "left",
   };
 
   const headerCell: React.CSSProperties = {
@@ -667,9 +668,9 @@ export default function Leaderboard({
             </div>
 
             {/* See more button */}
-            <button style={seeMoreBtn} onClick={openModal}>
+            {/* <button style={seeMoreBtn} onClick={openModal}>
               See more
-            </button>
+            </button> */}
           </>
         )}
       </div>

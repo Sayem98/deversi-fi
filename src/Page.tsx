@@ -1175,7 +1175,7 @@ function Page() {
           <Leaderboard
             contractAddress={CONTRACT_ADDRESS as Address}
             tokenAddress={TOKEN_ADDRESS as Address}
-            limit={10}
+            limit={1000}
             refreshMs={30_000}
           />
         </div>
