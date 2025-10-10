@@ -592,7 +592,7 @@ export default function Leaderboard({
               padding: isSmall ? 8 : 10,
             }}
           >
-            <div>
+            {/* <div>
               <div style={{ color: "#ccc", fontSize: isSmall ? 10 : 12 }}>
                 Your Volume Rank
               </div>
@@ -623,7 +623,7 @@ export default function Leaderboard({
               <div style={{ fontWeight: 800, fontSize: isSmall ? 12 : 14 }}>
                 {ranks.total.toString()}
               </div>
-            </div>
+            </div> */}
           </div>
         ) : (
           <div style={{ color: "#ccc", marginBottom: isSmall ? 8 : 10 }} />
