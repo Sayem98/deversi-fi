@@ -129,7 +129,18 @@ const NETWORK_LABELS: Record<number, string> = {
 
 const ETH_FALLBACK_PRICE = 4636.02;
 // const GAS_LIMIT_BUFFER = 1.2;
-
+function useIsSmall(breakpoint = 520) {
+  const [isSmall, setIsSmall] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mq = window.matchMedia(`(max-width:${breakpoint}px)`);
+    const onChange = () => setIsSmall(mq.matches);
+    onChange();
+    mq.addEventListener?.("change", onChange);
+    return () => mq.removeEventListener?.("change", onChange);
+  }, [breakpoint]);
+  return isSmall;
+}
 function Page() {
   /** ==== wagmi state ==== */
   const { address, isConnected } = useAccount();
@@ -137,6 +148,8 @@ function Page() {
   const publicClient = usePublicClient();
   const { data: walletClient } = useWalletClient();
   const { writeContractAsync } = useWriteContract();
+
+  const isSmall = useIsSmall(520);
 
   const { data: bal } = useBalance({ address });
   const ethBalance = useMemo(
@@ -1158,7 +1171,8 @@ function Page() {
                 marginBottom: 15,
                 color: "#a234fd",
                 display: "flex",
-                alignItems: "center",
+                alignItems: isSmall ? "center" : "flex-start",
+                justifyContent: isSmall ? "center" : "flex-start",
                 gap: 10,
               }}
             >
