@@ -325,20 +325,20 @@ export default function Leaderboard({
     flex: "0 0 auto",
   };
 
-  const seeMoreBtn: React.CSSProperties = {
-    marginTop: isSmall ? 10 : 12,
-    display: "block",
-    marginLeft: "auto",
-    marginRight: "auto",
-    padding: isSmall ? "8px 14px" : "10px 16px",
-    borderRadius: 999,
-    border: "1px solid #a234fd",
-    background: "rgba(0,0,0,0.3)",
-    color: "#fff",
-    fontWeight: 800,
-    cursor: "pointer",
-    fontSize: isSmall ? 12 : 14,
-  };
+  // const seeMoreBtn: React.CSSProperties = {
+  //   marginTop: isSmall ? 10 : 12,
+  //   display: "block",
+  //   marginLeft: "auto",
+  //   marginRight: "auto",
+  //   padding: isSmall ? "8px 14px" : "10px 16px",
+  //   borderRadius: 999,
+  //   border: "1px solid #a234fd",
+  //   background: "rgba(0,0,0,0.3)",
+  //   color: "#fff",
+  //   fontWeight: 800,
+  //   cursor: "pointer",
+  //   fontSize: isSmall ? 12 : 14,
+  // };
 
   /** ---------- Converters ---------- */
   const toEth = (wei: bigint) => parseFloat(formatEther(wei));
@@ -444,33 +444,33 @@ export default function Leaderboard({
   }, [publicClient, address, contractAddress, tab, limit, refreshMs]);
 
   /** ---------- Modal open: fetch larger list (seed + guard) ---------- */
-  const openModal = async () => {
-    // seed modal with current list so it never appears empty
-    setModalRows(rows);
-    setModalOpen(true);
+  // const openModal = async () => {
+  //   // seed modal with current list so it never appears empty
+  //   setModalRows(rows);
+  //   setModalOpen(true);
 
-    const tabAtOpen = tab; // capture to avoid race with tab switches
+  //   const tabAtOpen = tab; // capture to avoid race with tab switches
 
-    if (!publicClient) return;
-    setModalLoading(true);
+  //   if (!publicClient) return;
+  //   setModalLoading(true);
 
-    const myId = ++modalReqId.current; // guard against stale responses
-    try {
-      const { addrs, vals } = await fetchRows(tabAtOpen, fullLimit);
-      if (myId !== modalReqId.current) return; // ignore stale
+  //   const myId = ++modalReqId.current; // guard against stale responses
+  //   try {
+  //     const { addrs, vals } = await fetchRows(tabAtOpen, fullLimit);
+  //     if (myId !== modalReqId.current) return; // ignore stale
 
-      if (addrs.length > 0) {
-        setModalRows(addrs.map((a, i) => ({ addr: a, value: vals[i] ?? 0n })));
-      } else {
-        console.warn("Full list returned empty; keeping compact rows.");
-      }
-    } catch (e) {
-      console.error("Modal load error:", e);
-      // keep seeded rows
-    } finally {
-      if (myId === modalReqId.current) setModalLoading(false);
-    }
-  };
+  //     if (addrs.length > 0) {
+  //       setModalRows(addrs.map((a, i) => ({ addr: a, value: vals[i] ?? 0n })));
+  //     } else {
+  //       console.warn("Full list returned empty; keeping compact rows.");
+  //     }
+  //   } catch (e) {
+  //     console.error("Modal load error:", e);
+  //     // keep seeded rows
+  //   } finally {
+  //     if (myId === modalReqId.current) setModalLoading(false);
+  //   }
+  // };
 
   /** ---------- If tab changes while modal open, refresh modal ---------- */
   useEffect(() => {
