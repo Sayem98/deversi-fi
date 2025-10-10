@@ -581,16 +581,16 @@ export default function Leaderboard({
         {/* Your Ranks */}
         {address && ranks ? (
           <div
-            style={{
-              marginBottom: isSmall ? 10 : 14,
-              display: "grid",
-              gridTemplateColumns: "repeat(4, 1fr)",
-              gap: isSmall ? 6 : 8,
-              background: "rgba(0,0,0,0.25)",
-              border: "1px solid #a234fd55",
-              borderRadius: 12,
-              padding: isSmall ? 8 : 10,
-            }}
+          // style={{
+          //   marginBottom: isSmall ? 10 : 14,
+          //   display: "grid",
+          //   gridTemplateColumns: "repeat(4, 1fr)",
+          //   gap: isSmall ? 6 : 8,
+          //   background: "rgba(0,0,0,0.25)",
+          //   border: "1px solid #a234fd55",
+          //   borderRadius: 12,
+          //   padding: isSmall ? 8 : 10,
+          // }}
           >
             {/* <div>
               <div style={{ color: "#ccc", fontSize: isSmall ? 10 : 12 }}>
