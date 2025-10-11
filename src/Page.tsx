@@ -282,9 +282,9 @@ function Page() {
       setRankTotal(nTot);
 
       // pick the best (lowest) non-zero rank to show as Your Rank
-      const pool = [nVol, nBon, nCnt].filter((x) => x > 0);
-      const best = pool.length ? Math.min(...pool) : 0;
-      setYourRank(best > 0 ? `#${best}${nTot ? ` / ${nTot}` : ""}` : "-");
+      // const pool = [nVol, nBon, nCnt].filter((x) => x > 0);
+      // const best = pool.length ? Math.min(...pool) : 0;
+      setYourRank(nCnt.toString());
     } catch (e) {
       console.error("updateRank:", e);
       setYourRank("-");
