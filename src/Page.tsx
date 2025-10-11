@@ -845,6 +845,7 @@ function Page() {
                 color: "#a234fd",
                 display: "flex",
                 alignItems: "center",
+                justifyContent: "center",
                 gap: 10,
               }}
             >
@@ -900,6 +901,7 @@ function Page() {
                 color: "#a234fd",
                 display: "flex",
                 alignItems: "center",
+                justifyContent: "center",
                 gap: 10,
               }}
             >
@@ -1090,6 +1092,7 @@ function Page() {
                 color: "#a234fd",
                 display: "flex",
                 alignItems: "center",
+                justifyContent: "center",
                 gap: 10,
               }}
             >
@@ -1231,7 +1234,7 @@ function Page() {
                 color: "#a234fd",
                 display: "flex",
                 alignItems: isSmall ? "center" : "flex-start",
-                justifyContent: isSmall ? "center" : "flex-start",
+                justifyContent: "center",
                 gap: 10,
               }}
             >

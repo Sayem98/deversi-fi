@@ -141,11 +141,13 @@ export default function Leaderboard({
   };
 
   const titleStyle: React.CSSProperties = {
+    display: "flex",
     fontSize: isSmall ? "1.1em" : "1.3em",
     fontWeight: "bold",
     color: "#a234fd",
     marginBottom: isSmall ? 10 : 15,
     textAlign: isSmall ? "center" : "left",
+    justifyContent: "center",
   };
 
   const headerCell: React.CSSProperties = {
