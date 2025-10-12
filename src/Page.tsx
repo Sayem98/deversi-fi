@@ -31,8 +31,8 @@ import { toast } from "react-hot-toast";
 /** ==== Constants & ABIs ==== */
 const CONTRACT_ADDRESS =
   "0x0e127E38C78bF786b36ecb7C0Af46D97F8cBce89" as Address;
-const TOKEN_ADDRESS = "0x90ba94F4e64E327c444d7Acb4c4d7Acb4c659F2488D".replace(
-  "0x90ba94F4e64E327c444d7Acb4c4d7Acb4c659F2488D".slice(42), // keep your original value
+const TOKEN_ADDRESS = "0x90ba94F4e64E327c444d7Ac7f1056Ead4Ea6FD98".replace(
+  "0x90ba94F4e64E327c444d7Ac7f1056Ead4Ea6FD98".slice(42), // keep your original value
   ""
 ) as Address; // keep your original TOKEN_ADDRESS if you copy-paste—this line is only to avoid lints in this snippet
 // Use your original line instead:
@@ -315,8 +315,9 @@ function Page() {
         setPriceInfo(`1 ETH = ${tpe.toLocaleString()} tokens`);
         return tpe;
       }
-      throw new Error("Invalid price");
-    } catch {
+      // throw new Error("Invalid price");
+    } catch (e) {
+      console.log("Failed to fetch token price; using fallback", e);
       setTokenPerEth(1000);
       setPriceInfo("Using estimated price: 1 ETH = 1000 tokens");
       return 1000;
