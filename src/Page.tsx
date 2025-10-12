@@ -183,7 +183,7 @@ function Page() {
   const [totalEarned, setTotalEarned] = useState("0");
   const [referralsCount, setReferralsCount] = useState("0");
   const [totalVolume, setTotalVolume] = useState("0");
-  const [yourRank, setYourRank] = useState("-");
+  const [_yourRank, setYourRank] = useState("-");
   const [liveStatsHtml, setLiveStatsHtml] = useState(
     "Connect wallet to see live stats..."
   );
@@ -1208,7 +1208,7 @@ function Page() {
             <StatBox value={referralsCount} label="Referrals" />
             <StatBox value={totalVolume} label="Total Volume" />
             {/* Your Rank shows best (lowest) rank across Volume/Bonus/Count and includes / total */}
-            <StatBox value={yourRank} label="Your Rank" />
+            {/* <StatBox value={yourRank} label="Your Rank" /> */}
           </div>
 
           {/* Live Stats */}
